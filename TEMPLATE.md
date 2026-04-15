@@ -27,7 +27,7 @@ The single most important section. What event logs, auditing GPOs, or test deplo
 
 - Event IDs to watch
 - Where to find them
-- How long to leave audit running (typically 1–2 weeks)
+- How long to leave audit running (typically 1-2 weeks)
 - What "clean" looks like
 
 ## Remediation
@@ -36,7 +36,7 @@ Step-by-step. Exact GPO paths. Exact registry keys. Exact PowerShell. No ambigui
 
 ## What might break
 
-Honest list. If the answer is "nothing," say so — that's useful information.
+Honest list. If the answer is "nothing," say so as that's useful information.
 
 ## Rollback
 
