@@ -10,7 +10,7 @@ SMB signing cryptographically signs each SMB packet so the receiver can detect t
 
 ## What attack it enables
 
-Classic SMB relay — capture or coerce authentication from a privileged user, relay it to any host that does not require signing, and execute commands as that user. Often paired with LLMNR/NBT-NS poisoning or the IPv6/mitm6 attack.
+Classic SMB relay. The capture or coerce authentication from a privileged user, relay it to any host that does not require signing, and execute commands as that user. Often paired with LLMNR/NBT-NS poisoning or the IPv6/mitm6 attack.
 
 ## How to confirm it's present in your environment
 
@@ -68,7 +68,7 @@ client signing = mandatory
 
 ## What might break
 
-- Connections to/from any host that cannot do signing — increasingly rare.
+- Connections to/from any host that cannot do signing (increasingly rare.)
 - Slight CPU overhead. On modern hardware (anything with AES-NI) it's negligible. Old appliances may show measurable slowdowns.
 
 ## Rollback
