@@ -6,7 +6,7 @@
 
 ## What it is
 
-NTLMv1 is the original NT LAN Manager authentication protocol. Its challenge-response is cryptographically broken — a captured NTLMv1 response can be converted to NT hash in under 24 hours via crack.sh for free, and often in seconds with a GPU rig. NTLMv2 (1996) replaced it. NTLMv1 should not exist in a 2026 network.
+NTLMv1 is the original NT LAN Manager authentication protocol. Its challenge-response is cryptographically broken, meaning a captured NTLMv1 response can be converted to NT hash in under 24 hours via crack.sh for free, and often in seconds with a GPU rig. NTLMv2 (1996) replaced it. NTLMv1 should not exist in a modern network.
 
 ## What attack it enables
 
@@ -21,11 +21,11 @@ Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa' -Name LmCompatibil
 ```
 
 Levels:
-- `0` or `1` — sends and accepts LM and NTLMv1. **Vulnerable.**
-- `2` — sends NTLM only, accepts everything. Vulnerable.
-- `3` — sends NTLMv2 only, accepts everything. **Still vulnerable** (this is the most common misconfiguration).
-- `4` — DCs refuse LM. Better but not enough.
-- `5` — DCs refuse LM and NTLMv1. **Target state.**
+- `0` or `1` sends and accepts LM and NTLMv1. **Vulnerable.**
+- `2` sends NTLM only, accepts everything. Vulnerable.
+- `3` sends NTLMv2 only, accepts everything. **Still vulnerable** (this is the most common misconfiguration).
+- `4` DCs refuse LM. Better but not enough.
+- `5` DCs refuse LM and NTLMv1. **Target state.**
 
 The key insight: setting clients to "send NTLMv2" doesn't matter if the DC will still *accept* NTLMv1 from anyone who asks. You must set `5` on the DCs.
 
@@ -72,7 +72,7 @@ If audit log shows zero NTLMv1 traffic for two weeks, breakage risk is near zero
 
 ## Rollback
 
-Set the GPO back to "Send NTLMv2 response only" (level 3) — this restores DC acceptance of older protocols. `gpupdate /force` and reboot. Affected services authenticate again immediately.
+Set the GPO back to "Send NTLMv2 response only" (level 3) to restores DC acceptance of older protocols. `gpupdate /force` and reboot. Affected services authenticate again immediately.
 
 ## Validate the fix
 
