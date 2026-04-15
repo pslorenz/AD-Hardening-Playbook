@@ -8,7 +8,7 @@
 
 Web Proxy Auto-Discovery (WPAD) is a mechanism where Windows automatically searches for a proxy server by querying `wpad.<domain>` via DNS, and falls back to LLMNR/NBT-NS broadcast if DNS doesn't answer. If the lookup succeeds, the client downloads a `wpad.dat` PAC file from that host and routes web traffic through it.
 
-The attack: an adversary on the network responds to the WPAD lookup, serves a malicious PAC file, and now sees (and can modify) all of the victim's web traffic — including HTTP basic auth and NTLM challenges from intranet sites.
+The attack: an adversary on the network responds to the WPAD lookup, serves a malicious PAC file, and now sees (and can modify) all of the victim's web traffic, including HTTP basic auth and NTLM challenges from intranet sites.
 
 ## What attack it enables
 
@@ -44,7 +44,7 @@ Confirm no business workflow depends on WPAD before disabling. Ask the network t
 
 ## Remediation
 
-Defense in depth — do all three:
+Defense in depth. Do all three:
 
 **1. Confirm/restore the DNS Global Query Block List on every DNS server:**
 ```powershell
