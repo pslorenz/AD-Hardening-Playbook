@@ -2,7 +2,7 @@
 
 **Category:** Privileged Access
 **Operational Risk of Remediation:** Medium (members lose certain auth options)
-**Attacker Skill Required to Exploit:** N/A — this is a defensive control, not a vulnerability per se
+**Attacker Skill Required to Exploit:** N/A, this is a defensive control as opposed to a vulnerability.
 
 ## What it is
 
@@ -44,7 +44,7 @@ For comparison, list privileged users who *should* be in it:
 
 The four-hour TGT lifetime and the no-NTLM restriction are the two things most likely to surprise you. Before adding a privileged user:
 
-1. **Identify any service or scheduled task running as that user.** Service accounts should not be in Protected Users — period. Use gMSAs instead.
+1. **Identify any service or scheduled task running as that user.** Service accounts should not be in Protected Users period. Use gMSAs instead.
 2. **Identify any application that uses NTLM with that user.** Check Event ID 4624 with Logon Process = "NtLmSsp" on hosts the admin logs into. If you see that admin's account doing NTLM authentications, you'll need to fix the underlying app or accept that those workflows will break.
 3. **Confirm the domain functional level is Server 2012 R2 or later.** The full set of protections requires that.
 
@@ -66,7 +66,7 @@ Get-ADGroupMember 'Domain Admins' -Recursive | Where-Object objectClass -eq 'use
 
 **What does NOT go in:**
 - Service accounts (use gMSAs instead)
-- The default Administrator account (it's used for DSRM and other recovery — see Microsoft's guidance)
+- The default Administrator account (it's used for DSRM and other recovery, see Microsoft's guidance)
 - Computer accounts
 - Any account used by a service that requires NTLM, RC4, or unconstrained delegation
 
