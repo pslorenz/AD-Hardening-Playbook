@@ -6,7 +6,7 @@
 
 ## What it is
 
-When a computer or user account has the `TRUSTED_FOR_DELEGATION` flag, any user who authenticates to that host via Kerberos sends a copy of their TGT, which is cached in memory on the host. If an attacker compromises that host, they extract every cached TGT — including any privileged user's TGT — and use them to impersonate those users anywhere in the domain.
+When a computer or user account has the `TRUSTED_FOR_DELEGATION` flag, any user who authenticates to that host via Kerberos sends a copy of their TGT, which is cached in memory on the host. If an attacker compromises that host, they extract every cached TGT including any privileged user's TGT, and use them to impersonate those users anywhere in the domain.
 
 Combined with coercion bugs (PrinterBug, PetitPotam), an attacker can force a Domain Controller to authenticate to the unconstrained-delegation host, capture the DC's TGT, and immediately have full domain compromise.
 
@@ -35,7 +35,7 @@ Any non-DC computer in this list is a high-priority target. Any user in this lis
 ## What to audit before remediation
 
 For each host with unconstrained delegation, find out:
-- What service runs on it that "needed" delegation? (Often nothing — the checkbox was ticked years ago and never reviewed.)
+- What service runs on it that "needed" delegation? (Often nothing as the checkbox was ticked years ago and never reviewed.)
 - Could it use **constrained delegation** or **resource-based constrained delegation (RBCD)** instead? Both limit which services the cached ticket can access.
 - Is the host owner aware?
 
@@ -45,12 +45,12 @@ Check Event ID 4769 on the host (Kerberos service ticket operations) to see what
 
 **For each affected host, choose one:**
 
-**Option 1 — Remove delegation entirely (best, if it isn't actually used):**
+**Option 1: Remove delegation entirely (best, if it isn't actually used):**
 ```powershell
 Get-ADComputer <name> | Set-ADAccountControl -TrustedForDelegation $false
 ```
 
-**Option 2 — Migrate to constrained delegation:**
+**Option 2L Migrate to constrained delegation:**
 ```powershell
 # Allow this computer to delegate ONLY to specific SPNs
 Set-ADComputer <name> -Clear "userAccountControl" -Add @{ "msDS-AllowedToDelegateTo" = @("HOST/target1.example.local","HOST/target2.example.local") }
@@ -58,7 +58,7 @@ Set-ADComputer <name> -Clear "userAccountControl" -Add @{ "msDS-AllowedToDelegat
 Set-ADAccountControl -Identity <name> -TrustedForDelegation $false
 ```
 
-**Option 3 — Migrate to RBCD (resource-based constrained delegation), where the *target* host controls which accounts can delegate to it.** Often cleaner administratively.
+**Option 3: Migrate to RBCD (resource-based constrained delegation), where the *target* host controls which accounts can delegate to it.** Often cleaner administratively.
 
 **Additionally:** Add all sensitive accounts to the **Protected Users** group (see [`protected-users-not-used.md`](../privileged-access/protected-users-not-used.md)) and set the "Account is sensitive and cannot be delegated" flag on them so their TGTs are never cached on a delegation host even if one exists.
 
@@ -71,7 +71,7 @@ Get-ADUser -Filter { AdminCount -eq 1 } | ForEach-Object {
 ## What might break
 
 - Whatever service was relying on delegation. Most commonly: old SQL Server linked-server configs, old IIS sites with Kerberos delegation for backend SQL access, some SharePoint configurations.
-- If you remove delegation and a service breaks, the symptom is usually "double-hop authentication failure" — the front end works but a backend resource fails to authenticate as the user.
+- If you remove delegation and a service breaks, the symptom is usually "double-hop authentication failure" the front end works but a backend resource fails to authenticate as the user.
 
 ## Rollback
 
