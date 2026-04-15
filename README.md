@@ -68,8 +68,8 @@ findings/
 - [Stale accounts and password hygiene](accounts-policies/stale-accounts-password-hygiene.md)
 
 ### Detection and logging
-- [Insufficient audit policy and logging](detection-and-logging/insufficient-audit-policy.md)
-- [No honey accounts / honey SPNs deployed](detection-and-logging/honey-accounts-and-spns.md)
+- [Insufficient audit policy and logging](Detection-and-logging/insufficient-audit-policy.md)
+- [No honey accounts / honey SPNs deployed](Detection-and-logging/honey-accounts-and-spns.md)
 
 ### Legacy
 - [Print Spooler running on Domain Controllers](Legacy/print-spooler-on-dc.md)
