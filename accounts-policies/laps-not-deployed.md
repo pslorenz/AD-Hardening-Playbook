@@ -6,7 +6,7 @@
 
 ## What it is
 
-Without Local Administrator Password Solution (LAPS), most environments end up with the **same local administrator password on every workstation** — set during imaging and never changed. An attacker who compromises one workstation extracts the local admin hash, then uses pass-the-hash to authenticate to every other workstation in the company as local admin.
+Without Local Administrator Password Solution (LAPS), most environments end up with the **same local administrator password on every workstation** set during imaging and never changed. An attacker who compromises one workstation extracts the local admin hash, then uses pass-the-hash to authenticate to every other workstation in the company as local admin.
 
 LAPS gives every machine a unique, random local admin password, automatically rotated on a schedule, stored in AD with read access controlled by ACLs.
 
@@ -15,7 +15,7 @@ Microsoft now ships **Windows LAPS** built into Windows 10/11 and Server 2019+ a
 ## What attack it enables
 
 - Lateral movement across the entire workstation fleet from a single foothold (pass-the-hash with shared local admin).
-- Persistence — even if a user's domain credentials are reset, the local admin remains.
+- Persistence even if a user's domain credentials are reset, the local admin remains.
 
 MITRE ATT&CK: T1078.003, T1550.002
 
@@ -31,7 +31,7 @@ Get-ADObject -SearchBase (Get-ADRootDSE).schemaNamingContext -Filter { Name -lik
 Get-ADObject -SearchBase (Get-ADRootDSE).schemaNamingContext -Filter { Name -eq 'ms-Mcs-AdmPwd' }
 ```
 
-Sample test for shared local admin password — from one workstation, dump the SAM hash and try to authenticate to a different workstation:
+Sample test for shared local admin password from one workstation, dump the SAM hash and try to authenticate to a different workstation:
 ```bash
 # (Lab/authorized testing only)
 crackmapexec smb 10.0.0.0/24 -u Administrator -H <hash>
@@ -75,15 +75,15 @@ Set-LapsADReadPasswordPermission -Identity 'OU=Workstations,DC=example,DC=local'
 
 **5. Apply the GPO** to OUs containing workstations and member servers.
 
-**For older environments still on Server 2016/2019 without the April 2023 update**, install Legacy LAPS (the MSI from Microsoft) — but plan migration to Windows LAPS.
+**For older environments still on Server 2016/2019 without the April 2023 update**, install Legacy LAPS (the MSI from Microsoft) but plan migration to Windows LAPS.
 
 ## What might break
 
-- Helpdesk workflow ("what's the local admin password?") — they now retrieve it per-host:
+- Helpdesk workflow ("what's the local admin password?") they now retrieve it per-host:
   ```powershell
   Get-LapsADPassword -Identity 'WORKSTATION01' -AsPlainText
   ```
-- Hardcoded scripts using the old password — find and fix.
+- Hardcoded scripts using the old password find and remove.
 - Some imaging workflows that rejoin domain post-deploy may need a refresh cycle to populate the LAPS attribute.
 
 ## Rollback
