@@ -58,18 +58,18 @@ Uninstall-AdcsWebEnrollment
 Remove-WindowsFeature ADCS-Web-Enrollment
 ```
 
-**Option 2 — Disable NTLM on the AD CS web endpoints** (Microsoft's recommended mitigation for PetitPotam / ESC8):
+**Option 2: Disable NTLM on the AD CS web endpoints** (Microsoft's recommended mitigation for PetitPotam / ESC8):
 - Open IIS Manager on the CA web server
 - Select the `CertSrv` virtual directory → Authentication → disable `Windows Authentication` if Kerberos isn't required, or:
 - Select Windows Authentication → Providers → remove `NTLM`, leave only `Negotiate:Kerberos`
 
-**Option 3 — Enable Extended Protection for Authentication (EPA) and HTTPS-only:**
+**Option 3: Enable Extended Protection for Authentication (EPA) and HTTPS-only:**
 - IIS Manager → CertSrv → Authentication → Windows Authentication → Advanced Settings
 - Set "Extended Protection" to **Required**
 - Ensure HTTPS is enforced and HTTP redirects to HTTPS, or remove HTTP binding entirely
 - See Microsoft's KB5005413 for the full configuration
 
-**Option 4 — Block NTLM relay broadly via the EnableCertificateMappingMethods registry change** (post-May 2022 patches).
+**Option 4: Block NTLM relay broadly via the EnableCertificateMappingMethods registry change** (post-May 2022 patches).
 
 ## What might break
 
@@ -102,6 +102,6 @@ ntlmrelayx.py -t http://<ca>/certsrv/certfnsh.asp --adcs --template DomainContro
 
 ## References
 
-- Microsoft: [KB5005413 — Mitigating NTLM Relay Attacks on Active Directory Certificate Services](https://support.microsoft.com/en-us/topic/kb5005413-mitigating-ntlm-relay-attacks-on-active-directory-certificate-services-ad-cs-3612b773-4043-4aa9-b23d-b87910cd3429)
+- Microsoft: [KB5005413 Mitigating NTLM Relay Attacks on Active Directory Certificate Services](https://support.microsoft.com/en-us/topic/kb5005413-mitigating-ntlm-relay-attacks-on-active-directory-certificate-services-ad-cs-3612b773-4043-4aa9-b23d-b87910cd3429)
 - SpecterOps: [Certified Pre-Owned](https://posts.specterops.io/certified-pre-owned-d95910965cd2)
 - MITRE ATT&CK: T1557.001
