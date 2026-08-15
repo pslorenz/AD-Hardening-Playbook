@@ -1,7 +1,7 @@
-# AD ACL Misconfigurations (BloodHound Attack Paths)
+# BloodHound Attack Paths
 
 **Category:** Privileged Access
-**Operational Risk of Remediation:** Medium (depends on the ACL — some are clearly garbage, others may be legitimate-but-undocumented)
+**Operational Risk of Remediation:** Medium (depends on the ACL, some are clearly garbage and others may be legitimate but undocumented)
 **Attacker Skill Required to Exploit:** Low (BloodHound shows the path; tooling executes it)
 
 ## What it is
@@ -21,7 +21,7 @@ These individually look harmless. Chained, they become attack paths from "Domain
 
 ## What attack it enables
 
-Privilege escalation along the ACL graph. The attacker's path is fully visible in BloodHound — no novel exploitation required, just abuse of the rights that already exist.
+Privilege escalation along the ACL graph. The attacker's path is fully visible in BloodHound. No novel exploitation required, just abuse of the rights that already exist.
 
 MITRE ATT&CK: T1078, T1098
 
@@ -29,7 +29,7 @@ MITRE ATT&CK: T1078, T1098
 
 **Run BloodHound.** It is the industry-standard tool for finding these paths and is free.
 
-1. Install BloodHound CE (Community Edition) — Docker compose makes it 10 minutes.
+1. Install BloodHound CE (Community Edition) Docker compose makes it 10 minutes.
 2. Run **SharpHound** (Windows) or **bloodhound.py** / **bloodhound-ce.py** (Linux) as a low-priv domain user:
    ```
    SharpHound.exe -c All
@@ -38,7 +38,7 @@ MITRE ATT&CK: T1078, T1098
    ```
 3. Import the resulting JSON into BloodHound.
 4. Run the built-in queries:
-   - **Shortest Paths to Domain Admins** — the headline finding
+   - **Shortest Paths to Domain Admins** the headline finding
    - **Shortest Paths to High Value Targets**
    - **Shortest Paths from Owned Principals**
    - **Find Principals with DCSync Rights**
@@ -53,55 +53,21 @@ For a one-shot defender check without BloodHound, **PingCastle** and **Purple Kn
 
 Each ACL finding falls into one of three buckets:
 
-1. **Obviously wrong** — "Domain Users has GenericAll on Domain Admins" type stuff. Just remove it.
-2. **Legitimate but over-scoped** — a help-desk group has ResetPassword on the entire domain when it should only need it on a specific OU. Re-scope.
-3. **Legitimate and necessary** — usually scoped delegation that's been documented somewhere. Confirm with the team that requested it.
+1. **Obviously wrong** - "Domain Users has GenericAll on Domain Admins" type stuff. Just remove it.
+2. **Legitimate but over-scoped** - a help-desk group has ResetPassword on the entire domain when it should only need it on a specific OU. Re-scope.
+3. **Legitimate and necessary** - usually scoped delegation that's been documented somewhere. Confirm with the team that requested it.
 
 For each finding, before removing the ACL:
 - **Look at the object owner**: `Get-Acl "AD:\<DN>"` shows who owns it. Sometimes the owner is the original problem.
 - **Ask "who set this and why"**: change history isn't logged unless you've enabled DS object access auditing, but the principal that holds the right may be a clue (e.g., a long-departed contractor).
 - **Check whether the right is actually used**: enable directory service auditing for the object (`SACL` entry for the principal) and watch for use over a couple weeks.
 
-## Remediation
-
-For each unwanted ACE:
-
-```powershell
-# View ACL on an object
-$acl = Get-Acl "AD:\CN=Domain Admins,CN=Users,DC=example,DC=local"
-$acl.Access | Where-Object { $_.IdentityReference -match 'BadGroup' }
-
-# Remove a specific ACE
-$badAce = $acl.Access | Where-Object { $_.IdentityReference -match 'BadGroup' -and $_.ActiveDirectoryRights -match 'GenericAll' }
-$acl.RemoveAccessRule($badAce)
-Set-Acl -Path "AD:\CN=Domain Admins,CN=Users,DC=example,DC=local" -AclObject $acl
-```
-
-**At scale**: it's much easier to use the GUI for individual changes (ADUC → Advanced Features → object Properties → Security tab) and PowerShell for bulk audit/inventory. Bulk ACE modifications via script are powerful and easy to break things with — go slow.
-
-**Common cleanup patterns:**
-
-- Remove `Authenticated Users` and `Everyone` from anywhere they don't belong.
-- Remove ACEs granted to disabled or deleted accounts (orphaned SIDs).
-- Move privileged groups (Domain Admins, etc.) under a **protected OU** with restrictive ACLs and link a GPO that overrides AdminSDHolder defaults appropriately.
-- Verify **AdminSDHolder** itself (`CN=AdminSDHolder,CN=System,DC=...`) — its ACL is propagated to all "protected" objects every 60 minutes, so any garbage there spreads everywhere. Inspect carefully.
-
 ## What might break
 
-- Removing an ACL that was actually being used by a service or process — symptom is "user/script suddenly can't do X." Easy to roll back.
-- Changing AdminSDHolder is high-impact — propagates to every protected object. Test in a lab first if you can.
+- Removing an ACL that was actually being used by a service or process will expose symptom "user/script suddenly can't do X." Easy to roll back.
+- Changing AdminSDHolder is high-impact and propagates to every protected object. Test in a lab first if you can.
 
-## Rollback
-
-Re-add the ACE you removed:
-```powershell
-$acl = Get-Acl "AD:\..."
-$ace = New-Object System.DirectoryServices.ActiveDirectoryAccessRule(...)
-$acl.AddAccessRule($ace)
-Set-Acl -Path "AD:\..." -AclObject $acl
-```
-
-For AdminSDHolder changes, propagation is hourly — wait or run `Invoke-Command` to trigger SDProp manually if needed.
+For AdminSDHolder changes, propagation is hourly. Wait or run `Invoke-Command` to trigger SDProp manually if needed.
 
 ## Validate the fix
 
