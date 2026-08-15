@@ -14,20 +14,6 @@ Every finding in this repo follows the same template:
 
 The goal is that you can hand any one of these documents to a junior admin on a Tuesday morning and they can safely close the finding by Friday.
 
-## Repository layout
-
-```
-findings/
-├── authentication-protocols/   LLMNR, NBT-NS, NTLMv1
-├── network-services/           SMB, LDAP, WPAD, IPv6, RDP, Anonymous enum
-├── kerberos/                   Kerberoasting, AS-REP roasting, delegation
-├── adcs/                       AD Certificate Services (ESC1–ESC11)
-├── privileged-access/          Tier 0, Protected Users, ACLs, Built-in groups
-├── accounts-policies/          krbtgt, MAQ, LAPS, GPP, Lockout, Stale accounts
-├── detection-and-logging/      Audit policy, Honey accounts, SIEM gaps
-└── legacy/                     Print Spooler on DC, other legacy
-```
-
 ## Finding index
 
 ### Authentication protocols
@@ -55,7 +41,8 @@ findings/
 ### Privileged access
 - [Domain Admins logging into workstations](privileged-access/domain-admins-on-workstations.md)
 - [Protected Users group not used](privileged-access/protected-users-not-used.md)
-- [AD ACL misconfigurations (BloodHound paths)](privileged-access/ad-acl-misconfigurations.md)
+- [BloodHound attack paths (finding and prioritising)](privileged-access/bloodhound-attack-paths.md)
+- [Dangerous AD ACLs on sensitive objects](privileged-access/ad-acl-misconfigurations.md)
 - [Dangerous built-in groups over-populated](privileged-access/dangerous-builtin-groups.md)
 - [Entra Connect server treated as member server](privileged-access/entra-connect-is-tier0.md)
 
@@ -68,15 +55,15 @@ findings/
 - [Stale accounts and password hygiene](accounts-policies/stale-accounts-password-hygiene.md)
 
 ### Detection and logging
-- [Insufficient audit policy and logging](Detection-and-logging/insufficient-audit-policy.md)
-- [No honey accounts / honey SPNs deployed](Detection-and-logging/honey-accounts-and-spns.md)
+- [Insufficient audit policy and logging](detection-and-logging/insufficient-audit-policy.md)
+- [No honey accounts / honey SPNs deployed](detection-and-logging/honey-accounts-and-spns.md)
 
 ### Legacy
-- [Print Spooler running on Domain Controllers](Legacy/Print-Spooler-on-DC.md)
+- [Print Spooler running on Domain Controllers](legacy/print-spooler-on-dc.md)
 
 ## How to use this repo
 
-1. **Don't just start applying fixes.** Read the "What to audit before changing anything" section first. The fastest way to lose a Friday is to flip a GPO that breaks a vendor app no one documented.
+1. **Don't just start applying fixes.** Read the "What to audit before changing anything" section first. The fastest way to lose a weekend is to flip a GPO that breaks a vendor app no one documented (and trust me, they exist).
 2. **Order matters.** Some fixes (LDAP signing, SMB signing) need a 1–2 week audit window before enforcement. Others (LAPS, krbtgt rotation, Protected Users) you can do same-day.
 3. **Keep change windows.** Even "safe" changes have a non-zero blast radius in AD. Pair with someone, document the rollback, and don't push to all DCs at once.
 4. **Test in audit mode where it exists.** A surprising number of these settings have an audit-only mode that logs what *would* break before you enforce.
@@ -86,24 +73,24 @@ findings/
 
 If you're new to AD security and don't know where to start, work through findings in roughly this order. Each one teaches a concept the next ones build on.
 
-1. **Logging first** - [Insufficient audit policy](findings/detection-and-logging/insufficient-audit-policy.md). You can't measure progress without logs. (Being Redone currently)
-2. **Quick wins** - [LLMNR/NBT-NS](findings/authentication-protocols/llmnr-nbtns-poisoning.md), [WPAD](findings/network-services/wpad-spoofing.md), [Print Spooler on DCs](findings/legacy/print-spooler-on-dc.md), [GPP cpassword](findings/accounts-policies/gpp-cpassword.md).
-3. **Account hygiene** - [Stale accounts](findings/accounts-policies/stale-accounts-password-hygiene.md), [Lockout / spray](findings/accounts-policies/weak-account-lockout-and-spray.md), [LAPS](findings/accounts-policies/laps-not-deployed.md).
-4. **Run BloodHound and PingCastle** - read the [ACL misconfigurations](findings/privileged-access/ad-acl-misconfigurations.md) finding, then run the tools and use the rest of the repo to interpret what they show you.
-5. **Tier 0 work** - [Domain Admins on workstations](findings/privileged-access/domain-admins-on-workstations.md), [Protected Users](findings/privileged-access/protected-users-not-used.md), [Built-in groups](findings/privileged-access/dangerous-builtin-groups.md), [Entra Connect](findings/privileged-access/entra-connect-is-tier0.md).
-6. **Bigger projects with audit windows** - [LDAP signing](findings/network-services/ldap-signing-not-enforced.md), [SMB signing](findings/network-services/smb-signing-not-required.md), [SMBv1](findings/network-services/smbv1-enabled.md), [NTLMv1](findings/authentication-protocols/ntlmv1-enabled.md), [IPv6/mitm6](findings/network-services/ipv6-mitm6.md), [RDP](findings/network-services/rdp-exposed-or-weak.md).
-7. **Kerberos and ADCS** - [Kerberoasting](findings/kerberos/kerberoasting.md), [AS-REP](findings/kerberos/asreproasting.md), [Unconstrained delegation](findings/kerberos/unconstrained-delegation.md), [ESC1](findings/adcs/esc1-misconfigured-templates.md), [ESC8](findings/adcs/esc8-ntlm-relay-to-adcs.md).
-8. **Foundational identity hygiene** - [krbtgt rotation](findings/accounts-policies/krbtgt-not-rotated.md), [MachineAccountQuota](findings/accounts-policies/machine-account-quota.md), [Anonymous enumeration](findings/network-services/anonymous-ldap-samr-enumeration.md).
-9. **Detection canaries** - [Honey accounts/SPNs](findings/detection-and-logging/honey-accounts-and-spns.md). High-signal detection layer. (This is being redone currently)
+1. **Logging first** - [Insufficient audit policy](detection-and-logging/insufficient-audit-policy.md). You can't measure progress without logs. (Being Redone currently)
+2. **Quick wins** - [LLMNR/NBT-NS](authentication-protocols/llmnr-nbtns-poisoning.md), [WPAD](network-services/wpad-spoofing.md), [Print Spooler on DCs](legacy/print-spooler-on-dc.md), [GPP cpassword](accounts-policies/gpp-cpassword.md).
+3. **Account hygiene** - [Stale accounts](accounts-policies/stale-accounts-password-hygiene.md), [Lockout / spray](accounts-policies/weak-account-lockout-and-spray.md), [LAPS](accounts-policies/laps-not-deployed.md).
+4. **Run BloodHound and PingCastle** - read the [ACL misconfigurations](privileged-access/bloodhound-attack-paths.md) finding, then run the tools and use the rest of the repo to interpret what they show you.
+5. **Tier 0 work** - [Domain Admins on workstations](privileged-access/domain-admins-on-workstations.md), [Protected Users](privileged-access/protected-users-not-used.md), [Built-in groups](privileged-access/dangerous-builtin-groups.md), [Entra Connect](privileged-access/entra-connect-is-tier0.md).
+6. **Bigger projects with audit windows** - [LDAP signing](network-services/ldap-signing-not-enforced.md), [SMB signing](network-services/smb-signing-not-required.md), [SMBv1](network-services/smbv1-enabled.md), [NTLMv1](authentication-protocols/ntlmv1-enabled.md), [IPv6/mitm6](network-services/ipv6-mitm6.md), [RDP](network-services/rdp-exposed-or-weak.md).
+7. **Kerberos and ADCS** - [Kerberoasting](kerberos/kerberoasting.md), [AS-REP](kerberos/asreproasting.md), [Unconstrained delegation](kerberos/unconstrained-delegation.md), [ESC1](adcs/esc1-misconfigured-templates.md), [ESC8](adcs/esc8-ntlm-relay-to-adcs.md).
+8. **Foundational identity hygiene** - [krbtgt rotation](accounts-policies/krbtgt-not-rotated.md), [MachineAccountQuota](accounts-policies/machine-account-quota.md), [Anonymous enumeration](network-services/anonymous-ldap-samr-enumeration.md).
+9. **Detection canaries** - [Honey accounts/SPNs](detection-and-logging/honey-accounts-and-spns.md). High-signal detection layer. (This is being redone currently)
 
 ## Tools referenced throughout
 
 These come up across many findings. Worth installing and learning early:
 
-- **PingCastle** - free AD security audit tool, produces ranked report. If you are in managed services or consulting buy the lincense. 
+- **PingCastle** - free AD security audit tool, produces ranked report. If you are in managed services or consulting you will need to buy a license. 
 - **BloodHound** (Community Edition) - visualizes attack paths in AD.
 - **SharpHound** / **bloodhound-ce-python** - collectors for BloodHound.
-- **Purple Knight** (Semperis, free) - alternative AD audit tool. Check licensing if you are in managed services or consulting.
+- **Purple Knight** (Semperis, free) - alternative AD audit tool. Check licensing requirements if you are in managed services or consulting.
 - **Certipy** - ADCS enumeration and abuse (and verification of fixes).
 - **Microsoft Security Compliance Toolkit** - official baseline GPOs.
 - **Sysmon** + community config - endpoint logging.
