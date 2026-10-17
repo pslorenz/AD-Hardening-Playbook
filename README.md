@@ -1,6 +1,6 @@
 # AD Hardening Playbook
 
-A practical, contributor-friendly catalog of common Active Directory misconfigurations and weaknesses, written for **junior security analysts and systems administrators** who need to fix issues without taking down production.
+A practical, contributor-friendly catalog of common Active Directory misconfigurations and weaknesses, written for junior security analysts and systems administrators who need to fix issues without taking down production.
 
 Every finding in this repo follows the same template:
 
@@ -14,13 +14,33 @@ Every finding in this repo follows the same template:
 
 The goal is that you can hand any one of these documents to a junior admin on a Tuesday morning and they can safely close the finding by Friday.
 
+## Repository layout
+
+```
+.
+├── authentication-protocols/   LLMNR, NBT-NS, NTLMv1
+├── network-services/           SMB, LDAP, WPAD, IPv6, RDP, Anonymous enum
+├── kerberos/                   Kerberoasting, AS-REP roasting, delegation
+├── adcs/                       AD Certificate Services (ESC1, ESC8)
+├── privileged-access/          Tier 0, Protected Users, ACLs, Built-in groups
+├── accounts-policies/          krbtgt, MAQ, LAPS, GPP, Lockout, Stale accounts
+├── Detection-and-logging/      Audit policy, Honey accounts, SIEM gaps
+├── Legacy/                     Print Spooler on DC, other legacy
+├── ad-objects/                 AD object findings
+├── domain-configuration/       Domain-level configuration findings
+├── endpoint-hardening/         Endpoint hardening findings
+└── governance/                 Governance and process findings
+```
+
 ## Finding index
 
 ### Authentication protocols
+
 - [LLMNR / NBT-NS poisoning](authentication-protocols/llmnr-nbtns-poisoning.md)
 - [NTLMv1 still allowed](authentication-protocols/ntlmv1-enabled.md)
 
 ### Network services
+
 - [LDAP signing not enforced](network-services/ldap-signing-not-enforced.md)
 - [SMB signing not required](network-services/smb-signing-not-required.md)
 - [SMBv1 enabled](network-services/smbv1-enabled.md)
@@ -30,23 +50,26 @@ The goal is that you can hand any one of these documents to a junior admin on a 
 - [Anonymous AD enumeration (LDAP / SAMR / Pre-Win2K)](network-services/anonymous-ldap-samr-enumeration.md)
 
 ### Kerberos
+
 - [Kerberoasting (weak service account passwords)](kerberos/kerberoasting.md)
 - [AS-REP roasting (DONT_REQUIRE_PREAUTH)](kerberos/asreproasting.md)
 - [Unconstrained delegation](kerberos/unconstrained-delegation.md)
 
 ### Active Directory Certificate Services
+
 - [ESC1 — Misconfigured certificate templates](adcs/esc1-misconfigured-templates.md)
 - [ESC8 — NTLM relay to AD CS HTTP endpoints](adcs/esc8-ntlm-relay-to-adcs.md)
 
 ### Privileged access
+
 - [Domain Admins logging into workstations](privileged-access/domain-admins-on-workstations.md)
 - [Protected Users group not used](privileged-access/protected-users-not-used.md)
-- [BloodHound attack paths (finding and prioritising)](privileged-access/bloodhound-attack-paths.md)
-- [Dangerous AD ACLs on sensitive objects](privileged-access/ad-acl-misconfigurations.md)
+- [AD ACL misconfigurations (BloodHound paths)](privileged-access/ad-acl-misconfigurations.md)
 - [Dangerous built-in groups over-populated](privileged-access/dangerous-builtin-groups.md)
 - [Entra Connect server treated as member server](privileged-access/entra-connect-is-tier0.md)
 
 ### Accounts and policies
+
 - [krbtgt password not rotated](accounts-policies/krbtgt-not-rotated.md)
 - [MachineAccountQuota = 10 (default)](accounts-policies/machine-account-quota.md)
 - [LAPS not deployed](accounts-policies/laps-not-deployed.md)
@@ -55,15 +78,17 @@ The goal is that you can hand any one of these documents to a junior admin on a 
 - [Stale accounts and password hygiene](accounts-policies/stale-accounts-password-hygiene.md)
 
 ### Detection and logging
-- [Insufficient audit policy and logging](detection-and-logging/insufficient-audit-policy.md)
-- [No honey accounts / honey SPNs deployed](detection-and-logging/honey-accounts-and-spns.md)
+
+- [Insufficient audit policy and logging](Detection-and-logging/insufficient-audit-policy.md)
+- [No honey accounts / honey SPNs deployed](Detection-and-logging/honey-accounts-and-spns.md)
 
 ### Legacy
-- [Print Spooler running on Domain Controllers](legacy/print-spooler-on-dc.md)
+
+- [Print Spooler running on Domain Controllers](Legacy/Print-Spooler-on-DC.md)
 
 ## How to use this repo
 
-1. **Don't just start applying fixes.** Read the "What to audit before changing anything" section first. The fastest way to lose a weekend is to flip a GPO that breaks a vendor app no one documented (and trust me, they exist).
+1. **Don't just start applying fixes.** Read the "What to audit before changing anything" section first. The fastest way to lose a Friday is to flip a GPO that breaks a vendor app no one documented.
 2. **Order matters.** Some fixes (LDAP signing, SMB signing) need a 1–2 week audit window before enforcement. Others (LAPS, krbtgt rotation, Protected Users) you can do same-day.
 3. **Keep change windows.** Even "safe" changes have a non-zero blast radius in AD. Pair with someone, document the rollback, and don't push to all DCs at once.
 4. **Test in audit mode where it exists.** A surprising number of these settings have an audit-only mode that logs what *would* break before you enforce.
@@ -73,24 +98,24 @@ The goal is that you can hand any one of these documents to a junior admin on a 
 
 If you're new to AD security and don't know where to start, work through findings in roughly this order. Each one teaches a concept the next ones build on.
 
-1. **Logging first** - [Insufficient audit policy](detection-and-logging/insufficient-audit-policy.md). You can't measure progress without logs. (Being Redone currently)
-2. **Quick wins** - [LLMNR/NBT-NS](authentication-protocols/llmnr-nbtns-poisoning.md), [WPAD](network-services/wpad-spoofing.md), [Print Spooler on DCs](legacy/print-spooler-on-dc.md), [GPP cpassword](accounts-policies/gpp-cpassword.md).
+1. **Logging first** - [Insufficient audit policy](Detection-and-logging/insufficient-audit-policy.md). You can't measure progress without logs. (Being Redone currently)
+2. **Quick wins** - [LLMNR/NBT-NS](authentication-protocols/llmnr-nbtns-poisoning.md), [WPAD](network-services/wpad-spoofing.md), [Print Spooler on DCs](Legacy/Print-Spooler-on-DC.md), [GPP cpassword](accounts-policies/gpp-cpassword.md).
 3. **Account hygiene** - [Stale accounts](accounts-policies/stale-accounts-password-hygiene.md), [Lockout / spray](accounts-policies/weak-account-lockout-and-spray.md), [LAPS](accounts-policies/laps-not-deployed.md).
-4. **Run BloodHound and PingCastle** - read the [ACL misconfigurations](privileged-access/bloodhound-attack-paths.md) finding, then run the tools and use the rest of the repo to interpret what they show you.
+4. **Run BloodHound and PingCastle** - read the [ACL misconfigurations](privileged-access/ad-acl-misconfigurations.md) finding, then run the tools and use the rest of the repo to interpret what they show you.
 5. **Tier 0 work** - [Domain Admins on workstations](privileged-access/domain-admins-on-workstations.md), [Protected Users](privileged-access/protected-users-not-used.md), [Built-in groups](privileged-access/dangerous-builtin-groups.md), [Entra Connect](privileged-access/entra-connect-is-tier0.md).
 6. **Bigger projects with audit windows** - [LDAP signing](network-services/ldap-signing-not-enforced.md), [SMB signing](network-services/smb-signing-not-required.md), [SMBv1](network-services/smbv1-enabled.md), [NTLMv1](authentication-protocols/ntlmv1-enabled.md), [IPv6/mitm6](network-services/ipv6-mitm6.md), [RDP](network-services/rdp-exposed-or-weak.md).
 7. **Kerberos and ADCS** - [Kerberoasting](kerberos/kerberoasting.md), [AS-REP](kerberos/asreproasting.md), [Unconstrained delegation](kerberos/unconstrained-delegation.md), [ESC1](adcs/esc1-misconfigured-templates.md), [ESC8](adcs/esc8-ntlm-relay-to-adcs.md).
 8. **Foundational identity hygiene** - [krbtgt rotation](accounts-policies/krbtgt-not-rotated.md), [MachineAccountQuota](accounts-policies/machine-account-quota.md), [Anonymous enumeration](network-services/anonymous-ldap-samr-enumeration.md).
-9. **Detection canaries** - [Honey accounts/SPNs](detection-and-logging/honey-accounts-and-spns.md). High-signal detection layer. (This is being redone currently)
+9. **Detection canaries** - [Honey accounts/SPNs](Detection-and-logging/honey-accounts-and-spns.md). High-signal detection layer. (This is being redone currently)
 
 ## Tools referenced throughout
 
 These come up across many findings. Worth installing and learning early:
 
-- **PingCastle** - free AD security audit tool, produces ranked report. If you are in managed services or consulting you will need to buy a license. 
+- **PingCastle** - free AD security audit tool, produces ranked report. If you are in managed services or consulting buy the license.
 - **BloodHound** (Community Edition) - visualizes attack paths in AD.
 - **SharpHound** / **bloodhound-ce-python** - collectors for BloodHound.
-- **Purple Knight** (Semperis, free) - alternative AD audit tool. Check licensing requirements if you are in managed services or consulting.
+- **Purple Knight** (Semperis, free) - alternative AD audit tool. Check licensing if you are in managed services or consulting.
 - **Certipy** - ADCS enumeration and abuse (and verification of fixes).
 - **Microsoft Security Compliance Toolkit** - official baseline GPOs.
 - **Sysmon** + community config - endpoint logging.
@@ -106,4 +131,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Disclaimer
 
-These documents describe defensive hardening for environments you own and are authorized to administer. Validation commands are run against your own infrastructure. Don't run anything in here against systems you don't have written authorization to test. If you break something in prod following one of these, you are responsible, not me. Test... Test, and test some more.  
+These documents describe defensive hardening for environments you own and are authorized to administer. Validation commands are run against your own infrastructure. Don't run anything in here against systems you don't have written authorization to test. If you break something in prod following one of these, you are responsible, not me. Test... Test, and test some more.
